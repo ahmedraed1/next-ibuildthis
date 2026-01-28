@@ -1,11 +1,13 @@
 "use server";
 
 import { db } from "@/db";
-import { products } from "@/db/schema";
+import { products, votes } from "@/db/schema";
 import { FormState } from "@/types";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth, currentUser, clerkClient } from "@clerk/nextjs/server";
 import z from "zod";
 import { productSchema } from "./product-validations";
+import { sql, and, eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 
 export const addProductAction = async (
   prevState: FormState,
@@ -18,14 +20,6 @@ export const addProductAction = async (
       return {
         success: false,
         message: "You must be signed in to submit a product",
-        errors: undefined,
-      };
-    }
-
-    if (!orgId) {
-      return {
-        success: false,
-        message: "You must be a member of an organization to submit a product",
         errors: undefined,
       };
     }
@@ -61,7 +55,7 @@ export const addProductAction = async (
       tags: tagsArray,
       status: "pending",
       submittedBy: userEmail,
-      organizationId: orgId,
+      organizationId: orgId || null,
       userId,
     });
 
@@ -85,6 +79,113 @@ export const addProductAction = async (
       success: false,
       errors: undefined,
       message: "Failed to submit product",
+    };
+  }
+};
+
+export const voteProductAction = async (productId: number) => {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return {
+        success: false,
+        message: "You must be signed in to vote",
+      };
+    }
+
+    // Check if user has already voted
+    const existingVote = await db
+      .select()
+      .from(votes)
+      .where(and(eq(votes.userId, userId), eq(votes.productId, productId)))
+      .limit(1);
+
+    if (existingVote.length > 0) {
+      return {
+        success: false,
+        message: "You have already voted for this product",
+      };
+    }
+
+    // Non-transactional approach for Neon HTTP driver
+    // 1. Insert vote record (Enforces uniqueness via DB constraint)
+    try {
+      await db.insert(votes).values({
+        userId,
+        productId,
+      });
+    } catch (e) {
+      const error = e as { code?: string; message?: string };
+      // Handle potential race condition unique constraint violation
+      if (error.code === "23505" || error.message?.includes("unique_violation")) {
+        return {
+          success: false,
+          message: "You have already voted for this product",
+        };
+      }
+      throw e;
+    }
+
+    // 2. Increment product vote count
+    await db
+      .update(products)
+      .set({
+        voteCount: sql`${products.voteCount} + 1`,
+      })
+      .where(eq(products.id, productId));
+
+    revalidatePath("/");
+
+    return {
+      success: true,
+      message: "Vote added!",
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      message: "Failed to add vote",
+    };
+  }
+};
+
+export const updateProductStatusAction = async (
+  productId: number,
+  status: "approved" | "rejected" | "pending"
+) => {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    const isAdmin = user.publicMetadata?.isAdmin === true;
+
+    if (!isAdmin) throw new Error("Forbidden");
+
+    await db
+      .update(products)
+      .set({
+        status,
+        approvedAt: status === "approved" ? new Date() : null,
+      })
+      .where(eq(products.id, productId));
+
+    revalidatePath("/admin");
+    revalidatePath("/");
+    revalidatePath("/explore");
+    revalidatePath("/products");
+
+    return {
+      success: true,
+      message: `Product ${status} successfully`,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      message: "Failed to update product status",
     };
   }
 };

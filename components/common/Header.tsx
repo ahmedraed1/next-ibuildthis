@@ -20,7 +20,9 @@ import {
   SignInButton,
   SignUpButton,
   UserButton,
+  useUser,
 } from "@clerk/nextjs";
+import { LayoutDashboard } from "lucide-react";
 
 const Logo = () => {
   return (
@@ -39,6 +41,8 @@ const Logo = () => {
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user } = useUser();
+  const isAdmin = user?.publicMetadata?.isAdmin === true;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -122,7 +126,17 @@ export default function Header() {
                       "h-10 w-10 rounded-xl border-2 border-primary/20 hover:border-primary/50 transition-colors",
                   },
                 }}
-              />
+              >
+                {isAdmin && (
+                  <UserButton.MenuItems>
+                    <UserButton.Link
+                      label="Admin Dashboard"
+                      href="/admin"
+                      labelIcon={<LayoutDashboard size={16} />}
+                    />
+                  </UserButton.MenuItems>
+                )}
+              </UserButton>
             </SignedIn>
           </Suspense>
         </div>
@@ -180,7 +194,17 @@ export default function Header() {
             </SignedOut>
             <SignedIn>
               <div className="flex items-center gap-4 p-2 bg-muted/50 rounded-2xl">
-                <UserButton showName />
+                <UserButton showName>
+                  {isAdmin && (
+                    <UserButton.MenuItems>
+                      <UserButton.Link
+                        label="Admin Dashboard"
+                        href="/admin"
+                        labelIcon={<LayoutDashboard size={16} />}
+                      />
+                    </UserButton.MenuItems>
+                  )}
+                </UserButton>
               </div>
             </SignedIn>
           </div>

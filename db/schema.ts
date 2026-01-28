@@ -47,3 +47,22 @@ export const products = pgTable(
     ),
   })
 );
+
+// ============= VOTES =============
+export const votes = pgTable(
+  "votes",
+  {
+    id: serial("id").primaryKey(),
+    userId: varchar("user_id", { length: 255 }).notNull(),
+    productId: integer("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    userProductIdx: uniqueIndex("votes_user_product_idx").on(
+      table.userId,
+      table.productId
+    ),
+  })
+);

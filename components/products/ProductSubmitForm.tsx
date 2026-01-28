@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useActionState, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,10 +23,19 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { addProductAction } from "@/lib/products/product-action";
-import { FormState } from "react-hook-form";
+import { FormState } from "@/types";
+
+const initialState: FormState = {
+  success: false,
+  message: "",
+};
 
 export default function ProductSubmitForm() {
-  const [isPending, startTransition] = useTransition();
+  const [state, formAction, isPending] = useActionState(
+    addProductAction,
+    initialState,
+  );
+
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -43,16 +52,6 @@ export default function ProductSubmitForm() {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "");
     setFormData((prev) => ({ ...prev, name, slug }));
-  };
-
-  const handleSubmit = async (
-    formData: FormData,
-    event: React.FormEvent<HTMLFormElement>,
-  ) => {
-    "use server";
-    event.preventDefault();
-    const result = await addProductAction(formData);
-    console.log(result);
   };
 
   return (
@@ -75,7 +74,19 @@ export default function ProductSubmitForm() {
         </CardHeader>
 
         <CardContent className="p-8 pt-4">
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form action={formAction} className="space-y-8">
+            {state.message && (
+              <div
+                className={cn(
+                  "p-4 rounded-xl text-sm font-bold lowercase italic animate-in fade-in slide-in-from-top-2 duration-300",
+                  state.success
+                    ? "bg-emerald-50 text-emerald-600"
+                    : "bg-rose-50 text-rose-600",
+                )}
+              >
+                {state.message}
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Name Field */}
               <div className="space-y-3 group">
@@ -87,12 +98,21 @@ export default function ProductSubmitForm() {
                 </Label>
                 <Input
                   id="name"
+                  name="name"
                   placeholder="e.g. ibuildthis"
-                  className="h-12 rounded-xl border-border/50 bg-background/50 focus-visible:ring-primary focus-visible:border-primary transition-all text-lg font-bold placeholder:font-medium placeholder:opacity-30"
+                  className={cn(
+                    "h-12 rounded-xl border-border/50 bg-background/50 focus-visible:ring-primary focus-visible:border-primary transition-all text-lg font-bold placeholder:font-medium placeholder:opacity-30",
+                    state.errors?.name && "border-rose-500 bg-rose-50/50",
+                  )}
                   value={formData.name}
                   onChange={handleNameChange}
                   required
                 />
+                {state.errors?.name && (
+                  <p className="text-[10px] text-rose-500 font-bold lowercase italic">
+                    {state.errors.name[0]}
+                  </p>
+                )}
               </div>
 
               {/* Slug Field (Readonlyish) */}
@@ -109,11 +129,17 @@ export default function ProductSubmitForm() {
                   </span>
                   <Input
                     id="slug"
+                    name="slug"
                     className="h-12 pl-[105px] rounded-xl border-border/50 bg-muted/20 text-muted-foreground cursor-not-allowed font-medium lowercase"
                     value={formData.slug}
                     readOnly
                   />
                 </div>
+                {state.errors?.slug && (
+                  <p className="text-[10px] text-rose-500 font-bold lowercase italic">
+                    {state.errors.slug[0]}
+                  </p>
+                )}
               </div>
 
               {/* Website URL */}
@@ -126,9 +152,13 @@ export default function ProductSubmitForm() {
                 </Label>
                 <Input
                   id="websiteUrl"
+                  name="websiteUrl"
                   type="url"
                   placeholder="https://yourproject.com"
-                  className="h-12 rounded-xl border-border/50 bg-background/50 focus-visible:ring-primary transition-all font-medium"
+                  className={cn(
+                    "h-12 rounded-xl border-border/50 bg-background/50 focus-visible:ring-primary transition-all font-medium",
+                    state.errors?.websiteUrl && "border-rose-500 bg-rose-50/50",
+                  )}
                   value={formData.websiteUrl}
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -138,6 +168,11 @@ export default function ProductSubmitForm() {
                   }
                   required
                 />
+                {state.errors?.websiteUrl && (
+                  <p className="text-[10px] text-rose-500 font-bold lowercase italic">
+                    {state.errors.websiteUrl[0]}
+                  </p>
+                )}
               </div>
 
               {/* Tagline */}
@@ -162,9 +197,13 @@ export default function ProductSubmitForm() {
                 </div>
                 <Input
                   id="tagline"
+                  name="tagline"
                   placeholder="A one-sentence pitch for your product"
                   maxLength={200}
-                  className="h-12 rounded-xl border-border/50 bg-background/50 focus-visible:ring-primary transition-all font-semibold italic opacity-90"
+                  className={cn(
+                    "h-12 rounded-xl border-border/50 bg-background/50 focus-visible:ring-primary transition-all font-semibold italic opacity-90",
+                    state.errors?.tagline && "border-rose-500 bg-rose-50/50",
+                  )}
                   value={formData.tagline}
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -174,6 +213,11 @@ export default function ProductSubmitForm() {
                   }
                   required
                 />
+                {state.errors?.tagline && (
+                  <p className="text-[10px] text-rose-500 font-bold lowercase italic">
+                    {state.errors.tagline[0]}
+                  </p>
+                )}
               </div>
 
               {/* Description */}
@@ -186,8 +230,13 @@ export default function ProductSubmitForm() {
                 </Label>
                 <Textarea
                   id="description"
+                  name="description"
                   placeholder="Explain what your project does, who it's for, and the tech stack you used..."
-                  className="min-h-[160px] rounded-2xl border-border/50 bg-background/50 focus-visible:ring-primary transition-all font-medium leading-relaxed p-6"
+                  className={cn(
+                    "min-h-[160px] rounded-2xl border-border/50 bg-background/50 focus-visible:ring-primary transition-all font-medium leading-relaxed p-6",
+                    state.errors?.description &&
+                      "border-rose-500 bg-rose-50/50",
+                  )}
                   value={formData.description}
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -197,6 +246,11 @@ export default function ProductSubmitForm() {
                   }
                   required
                 />
+                {state.errors?.description && (
+                  <p className="text-[10px] text-rose-500 font-bold lowercase italic">
+                    {state.errors.description[0]}
+                  </p>
+                )}
               </div>
 
               {/* Tags */}
@@ -209,14 +263,23 @@ export default function ProductSubmitForm() {
                 </Label>
                 <Input
                   id="tags"
+                  name="tags"
                   placeholder="SaaS, Open Source, AI (comma separated)"
-                  className="h-12 rounded-xl border-border/50 bg-background/50 focus-visible:ring-primary transition-all font-medium"
+                  className={cn(
+                    "h-12 rounded-xl border-border/50 bg-background/50 focus-visible:ring-primary transition-all font-medium",
+                    state.errors?.tags && "border-rose-500 bg-rose-50/50",
+                  )}
                   value={formData.tags}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, tags: e.target.value }))
                   }
                 />
-                <p className="text-[10px] text-muted-foreground lowercase opacity-60 italic">
+                {state.errors?.tags && (
+                  <p className="text-[10px] text-rose-500 font-bold lowercase italic">
+                    {state.errors.tags[0]}
+                  </p>
+                )}
+                <p className="text-[10px] text-muted-foreground lowercase italic opacity-60">
                   Tip: Use broad categories to help people find your project.
                 </p>
               </div>

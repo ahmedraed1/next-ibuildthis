@@ -25,38 +25,40 @@ export default function HeroSection() {
   return (
     <section className="relative min-h-[95vh] flex items-center justify-center overflow-hidden bg-background py-24 lg:py-32">
       {/* Dynamic Background with Mesh Effect and animated blobs */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
+      <div className="absolute inset-0 z-0 overflow-hidden noise-bg">
         {/* Colorful Mesh Gradient */}
-        <div className="absolute inset-0 opacity-[0.15] bg-[radial-gradient(at_0%_0%,var(--color-primary)_0,transparent_50%),radial-gradient(at_50%_0%,#3b82f6_0,transparent_50%),radial-gradient(at_100%_0%,#ec4899_0,transparent_50%),radial-gradient(at_0%_100%,#8b5cf6_0,transparent_50%),radial-gradient(at_50%_100%,#06b6d4_0,transparent_50%),radial-gradient(at_100%_100%,#f59e0b_0,transparent_50%)]" />
+        <div className="absolute inset-0 opacity-[0.25] bg-[radial-gradient(at_0%_0%,var(--color-primary)_0,transparent_50%),radial-gradient(at_50%_0%,oklch(0.65_0.22_260)_0,transparent_50%),radial-gradient(at_100%_0%,oklch(0.6_0.2_300)_0,transparent_50%),radial-gradient(at_0%_100%,oklch(0.5_0.25_280)_0,transparent_50%),radial-gradient(at_50%_100%,oklch(0.7_0.15_220)_0,transparent_50%),radial-gradient(at_100%_100%,oklch(0.8_0.15_240)_0,transparent_50%)]" />
 
         {/* Animated Blobs */}
-        <div className="absolute top-[10%] left-[10%] w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] [animation:drift_10s_ease-in-out_infinite]" />
-        <div className="absolute bottom-[10%] right-[10%] w-[500px] h-[500px] bg-rose-500/10 rounded-full blur-[120px] [animation:drift_12s_ease-in-out_infinite_reverse]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-primary/5 rounded-[100%] blur-[120px] [animation:pulse-slow_8s_ease-in-out_infinite]" />
+        <div className="absolute top-[10%] left-[10%] w-[600px] h-[600px] bg-primary/20 rounded-full blur-[140px] [animation:drift_15s_ease-in-out_infinite]" />
+        <div className="absolute bottom-[10%] right-[10%] w-[600px] h-[600px] bg-accent/20 rounded-full blur-[140px] [animation:drift_18s_ease-in-out_infinite_reverse]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-primary/5 rounded-[100%] blur-[140px] [animation:pulse-slow_10s_ease-in-out_infinite]" />
       </div>
 
       <div className="container relative z-10 mx-auto px-4 md:px-6">
-        <div className="flex flex-col items-center text-center space-y-10 max-w-5xl mx-auto">
+        <div className="flex flex-col items-center text-center space-y-12 max-w-5xl mx-auto">
           <div className="animate-in fade-in slide-in-from-top-4 duration-1000">
             <LiveBadge text="Launching on IBuildThis" />
           </div>
 
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight text-foreground animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-[-0.04em] text-foreground animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
             Share what you&apos;ve{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-primary to-rose-500 animate-gradient-x">
+            <span className="text-primary italic inline-block hover:scale-105 transition-transform duration-500 cursor-default">
               built
             </span>
             ,
             <br className="hidden md:block" /> discover what&apos;s{" "}
-            <span className="italic font-serif font-light text-primary py-2 px-4 rounded-2xl bg-primary/5 border border-primary/10 inline-block mt-2 md:mt-0">
-              launching
+            <span className="relative inline-block mt-2 md:mt-0 px-6 py-2">
+              <span className="relative z-10 text-primary italic font-serif font-light">
+                launching
+              </span>
+              <div className="absolute inset-0 bg-primary/5 border border-primary/20 rounded-2xl glass-surface -rotate-1 skew-x-1 shadow-xl shadow-primary/5" />
             </span>
           </h1>
 
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300">
-            The ultimate community for makers, developers, and creators to
-            showcase their latest projects and find inspiration for their next
-            big idea.
+          <p className="text-xl md:text-2xl text-muted-foreground/80 max-w-3xl leading-relaxed italic font-medium lowercase animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300">
+            The ultimate community for makers to showcase their latest projects
+            and find inspiration for their next big idea.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-6 pt-4 animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-500">
